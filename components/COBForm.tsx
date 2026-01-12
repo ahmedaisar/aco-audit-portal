@@ -83,31 +83,36 @@ const COBForm: React.FC<COBFormProps> = ({ onSuccess }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const request: WebsiteChangeRequest = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      tabType: TabType.COB,
-      requestorName: formData.auditor,
-      department: 'Digital Audit',
-      emailId: 'digital@atmospherecore.com',
-      todayDate: formData.auditDate,
-      priority: 'Medium',
-      url: formData.url,
-      pageName: `COB Audit - ${formData.resort}`,
-      changeDescription: `Website Audit Checklist Submission for ${formData.resort}`,
-      files: [],
-      desiredGoLiveDate: formData.deadline,
-      resortName: formData.resort,
-      resortOpsContact: formData.resortOpsContact,
-      checklistData: checklist,
-      notesData: notes
-    };
+    try {
+      const request: WebsiteChangeRequest = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        tabType: TabType.COB,
+        requestorName: formData.auditor,
+        department: 'Digital Audit',
+        emailId: 'digital@atmospherecore.com',
+        todayDate: formData.auditDate,
+        priority: 'Medium',
+        url: formData.url,
+        pageName: `COB Audit - ${formData.resort}`,
+        changeDescription: `Website Audit Checklist Submission for ${formData.resort}`,
+        files: [],
+        desiredGoLiveDate: formData.deadline,
+        resortName: formData.resort,
+        resortOpsContact: formData.resortOpsContact,
+        checklistData: checklist,
+        notesData: notes
+      };
 
-    storageService.saveRequest(request);
-    await new Promise(r => setTimeout(r, 800));
-    alert("COB Audit Checklist submitted successfully!");
-    setIsSubmitting(false);
-    onSuccess();
+      await storageService.saveRequest(request, []);
+      alert("COB Audit Checklist submitted successfully!");
+      onSuccess();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to submit audit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

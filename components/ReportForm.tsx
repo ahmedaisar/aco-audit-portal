@@ -54,27 +54,32 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    const request: WebsiteChangeRequest = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      tabType: TabType.RAS,
-      requestorName: formData.requestorName || '',
-      department: formData.department || '',
-      emailId: formData.emailId || '',
-      todayDate: formData.todayDate || '',
-      priority: formData.priority as Priority,
-      url: formData.url || '',
-      pageName: formData.pageName || '',
-      changeDescription: formData.changeDescription || '',
-      files: files,
-      desiredGoLiveDate: formData.desiredGoLiveDate || '',
-    };
+    try {
+      const request: WebsiteChangeRequest = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        tabType: TabType.RAS,
+        requestorName: formData.requestorName || '',
+        department: formData.department || '',
+        emailId: formData.emailId || '',
+        todayDate: formData.todayDate || '',
+        priority: formData.priority as Priority,
+        url: formData.url || '',
+        pageName: formData.pageName || '',
+        changeDescription: formData.changeDescription || '',
+        files: files,
+        desiredGoLiveDate: formData.desiredGoLiveDate || '',
+      };
 
-    storageService.saveRequest(request);
-    await new Promise(r => setTimeout(r, 800));
-    alert("Website change request submitted successfully!");
-    setIsSubmitting(false);
-    onSuccess();
+      await storageService.saveRequest(request, rawFiles);
+      alert("Website change request submitted successfully!");
+      onSuccess();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to submit request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

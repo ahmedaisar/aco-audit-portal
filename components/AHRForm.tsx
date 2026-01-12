@@ -130,31 +130,36 @@ const AHRForm: React.FC<AHRFormProps> = ({ onSuccess }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const request: WebsiteChangeRequest = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      tabType: TabType.AHR,
-      requestorName: formData.auditor,
-      department: 'AHR Quality Assurance',
-      emailId: 'audit@atmospherehotelsandresorts.com',
-      todayDate: formData.auditDate,
-      priority: 'Medium',
-      url: formData.url,
-      pageName: `AHR Audit - ${formData.resort}`,
-      changeDescription: `AHR Digital Audit Report for ${formData.resort}`,
-      files: [],
-      desiredGoLiveDate: formData.deadline,
-      resortName: formData.resort,
-      resortOpsContact: formData.resortOpsContact,
-      checklistData: checklist,
-      notesData: notes
-    };
+    try {
+      const request: WebsiteChangeRequest = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        tabType: TabType.AHR,
+        requestorName: formData.auditor,
+        department: 'AHR Quality Assurance',
+        emailId: 'audit@atmospherehotelsandresorts.com',
+        todayDate: formData.auditDate,
+        priority: 'Medium',
+        url: formData.url,
+        pageName: `AHR Audit - ${formData.resort}`,
+        changeDescription: `AHR Digital Audit Report for ${formData.resort}`,
+        files: [],
+        desiredGoLiveDate: formData.deadline,
+        resortName: formData.resort,
+        resortOpsContact: formData.resortOpsContact,
+        checklistData: checklist,
+        notesData: notes
+      };
 
-    storageService.saveRequest(request);
-    await new Promise(r => setTimeout(r, 800));
-    alert("AHR Audit Checklist submitted successfully!");
-    setIsSubmitting(false);
-    onSuccess();
+      await storageService.saveRequest(request, []);
+      alert("AHR Audit Checklist submitted successfully!");
+      onSuccess();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to submit audit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
