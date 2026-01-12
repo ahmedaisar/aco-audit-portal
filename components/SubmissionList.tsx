@@ -41,8 +41,9 @@ const SubmissionList: React.FC = () => {
       COB: 'bg-purple-100 text-purple-700 border-purple-200',
       AHR: 'bg-indigo-100 text-indigo-700 border-indigo-200'
     };
+    const color = colors[tabType as keyof typeof colors] || 'bg-gray-100 text-gray-700 border-gray-200';
     return (
-      <span className={`px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold border ${colors[tabType as keyof typeof colors]}`}>
+      <span className={`px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold border ${color}`}>
         {tabType}
       </span>
     );
@@ -219,7 +220,10 @@ const SubmissionList: React.FC = () => {
                 )}
 
                 {/* Checklist Data for AHR/COB */}
-                {selectedRequest.checklistData && Object.keys(selectedRequest.checklistData).length > 0 && (
+                {selectedRequest.checklistData && 
+                 typeof selectedRequest.checklistData === 'object' && 
+                 selectedRequest.checklistData !== null &&
+                 Object.keys(selectedRequest.checklistData).length > 0 && (
                   <section className="pt-2 border-t border-slate-100">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Audit Checklist Results</label>
                     <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 max-h-48 overflow-y-auto">

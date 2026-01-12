@@ -33,10 +33,10 @@ export default async function handler(req: any, res: any) {
         pageName: request.pageName,
         changeDescription: request.changeDescription,
         desiredGoLiveDate: request.desiredGoLiveDate,
-        resortName: request.resortName || null,
-        resortOpsContact: request.resortOpsContact || null,
-        checklistData: request.checklistData || null,
-        notesData: request.notesData || null,
+        resortName: request.resortName,
+        resortOpsContact: request.resortOpsContact,
+        checklistData: request.checklistData,
+        notesData: request.notesData,
       });
 
       if (files && files.length > 0) {
