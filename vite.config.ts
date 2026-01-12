@@ -8,15 +8,6 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
-        proxy: {
-          '/api': {
-            target: process.env.VERCEL_URL 
-              ? `https://${process.env.VERCEL_URL}` 
-              : 'http://localhost:3000',
-            changeOrigin: true,
-            rewrite: (path) => path,
-          },
-        },
       },
       plugins: [react()],
       define: {

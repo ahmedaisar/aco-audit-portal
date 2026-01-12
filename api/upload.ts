@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
          * You can add authorization logic here.
          */
         return {
-          allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'],
+          allowedContentTypes: ['image/jpeg', 'image/png', 'application/pdf', 'text/plain'],
           tokenPayload: JSON.stringify({
             // optional, sent to your server on upload completion
             // user_id: '1234',

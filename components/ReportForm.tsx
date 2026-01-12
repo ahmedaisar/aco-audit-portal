@@ -13,6 +13,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<FileMetadata[]>([]);
+  const [rawFiles, setRawFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState<Partial<WebsiteChangeRequest>>({
     priority: 'Medium',
     department: 'Marketing',
@@ -21,13 +22,31 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
+    
+    // Validate file types
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf', 'text/plain'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.txt'];
+    
+    const invalidFiles = selectedFiles.filter((file: File) => {
+      const hasValidType = allowedTypes.includes(file.type);
+      const hasValidExt = allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+      return !hasValidType && !hasValidExt;
+    });
+    
+    if (invalidFiles.length > 0) {
+      alert(`Invalid file type(s). Only JPG, PNG, PDF, and TXT files are allowed.\n\nRejected: ${invalidFiles.map((f: File) => f.name).join(', ')}`);
+      e.target.value = ''; // Reset input
+      return;
+    }
+    
     if (selectedFiles.length + files.length > 5) {
       alert("Maximum 5 files allowed.");
+      e.target.value = '';
       return;
     }
 
     const newFiles: FileMetadata[] = await Promise.all(
-      selectedFiles.map(file => {
+      selectedFiles.map((file: File) => {
         return new Promise<FileMetadata>((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -44,10 +63,13 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
     );
 
     setFiles(prev => [...prev, ...newFiles]);
+    setRawFiles(prev => [...prev, ...selectedFiles]);
+    e.target.value = ''; // Reset input after successful selection
   };
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
+    setRawFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -228,9 +250,44 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
               onClick={() => fileInputRef.current?.click()}
               className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-8 text-center cursor-pointer hover:border-teal-500 hover:bg-teal-50 transition-all group"
             >
-              <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+              <input 
+                type="file" 
+                multiple 
+                accept=".jpg,.jpeg,.png,.pdf,.txt,image/jpeg,image/png,application/pdf,text/plain"
+                className="hidden" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+              />
+              <svg className="w-12 h-12 mx-auto mb-3 text-slate-300 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
               <p className="text-slate-600 font-bold text-sm">Click to upload or drag and drop</p>
+              <p className="text-xs text-slate-400 mt-1">JPG, PNG, PDF, TXT (Max 5 files)</p>
             </div>
+            {files.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {files.map((file, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-xs font-medium text-slate-700 truncate">{file.name}</span>
+                      <span className="text-[10px] text-slate-400">({(file.size / 1024).toFixed(1)} KB)</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
+                      className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-xs md:text-sm font-bold text-slate-700 mb-1.5 md:mb-2">10. Desired Go-Live Date *</label>
