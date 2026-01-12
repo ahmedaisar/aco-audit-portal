@@ -1,17 +1,23 @@
 
 export type Priority = 'High' | 'Medium' | 'Low';
 
+export enum TabType {
+  RAS = 'RAS',
+  COB = 'COB',
+  AHR = 'AHR'
+}
+
 export interface FileMetadata {
   name: string;
   size: number;
   type: string;
   base64?: string;
-  url?: string;
 }
 
 export interface WebsiteChangeRequest {
   id: string;
-  timestamp: string | number;
+  timestamp: number;
+  tabType: TabType;
   
   // Requestor Details
   requestorName: string;
@@ -28,6 +34,14 @@ export interface WebsiteChangeRequest {
   changeDescription: string;
   files: FileMetadata[];
   desiredGoLiveDate: string;
+
+  // Audit Specific Fields (COB/AHR)
+  resortName?: string;
+  resortOpsContact?: string;
+  
+  // Checklist Data
+  checklistData?: Record<string, string>;
+  notesData?: Record<string, string>;
 }
 
 export enum AppView {

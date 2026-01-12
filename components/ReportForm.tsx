@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { WebsiteChangeRequest, Priority, FileMetadata } from '../types';
+import { WebsiteChangeRequest, Priority, FileMetadata, TabType } from '../types';
 import { storageService } from '../services/storageService';
 
 interface ReportFormProps {
@@ -13,7 +13,6 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<FileMetadata[]>([]);
-  const [rawFiles, setRawFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState<Partial<WebsiteChangeRequest>>({
     priority: 'Medium',
     department: 'Marketing',
@@ -27,58 +26,62 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
       return;
     }
 
-    const newMetadata: FileMetadata[] = selectedFiles.map(file => ({
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      // base64 is not needed anymore for upload, but could be used for preview if needed
-    }));
+    const newFiles: FileMetadata[] = await Promise.all(
+      selectedFiles.map(file => {
+        return new Promise<FileMetadata>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            resolve({
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              base64: reader.result as string
+            });
+          };
+          reader.readAsDataURL(file);
+        });
+      })
+    );
 
-    setFiles(prev => [...prev, ...newMetadata]);
-    setRawFiles(prev => [...prev, ...selectedFiles]);
+    setFiles(prev => [...prev, ...newFiles]);
   };
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
-    setRawFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    try {
-      const request: WebsiteChangeRequest = {
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        requestorName: formData.requestorName || '',
-        department: formData.department || '',
-        emailId: formData.emailId || '',
-        todayDate: formData.todayDate || '',
-        priority: formData.priority as Priority,
-        url: formData.url || '',
-        pageName: formData.pageName || '',
-        changeDescription: formData.changeDescription || '',
-        files: [], // Will be updated by server
-        desiredGoLiveDate: formData.desiredGoLiveDate || '',
-      };
+    const request: WebsiteChangeRequest = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      tabType: TabType.RAS,
+      requestorName: formData.requestorName || '',
+      department: formData.department || '',
+      emailId: formData.emailId || '',
+      todayDate: formData.todayDate || '',
+      priority: formData.priority as Priority,
+      url: formData.url || '',
+      pageName: formData.pageName || '',
+      changeDescription: formData.changeDescription || '',
+      files: files,
+      desiredGoLiveDate: formData.desiredGoLiveDate || '',
+    };
 
-      await storageService.saveRequest(request, rawFiles);
-      alert("Website change request submitted successfully!");
-      onSuccess();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to submit request. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    storageService.saveRequest(request);
+    await new Promise(r => setTimeout(r, 800));
+    alert("Website change request submitted successfully!");
+    setIsSubmitting(false);
+    onSuccess();
   };
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-8">
       <div className="bg-teal-700 px-6 py-8 md:px-8 md:py-10 text-white relative">
         <div className="relative z-10">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Website Change Request</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Website Change Request (RAS)</h2>
           <p className="text-teal-100 mt-1 md:mt-2 text-base md:text-lg">Atmosphere Core Digital Operations</p>
           <div className="mt-4 flex items-start md:items-center gap-2 text-xs text-teal-200">
             <svg className="w-4 h-4 mt-0.5 md:mt-0 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -90,7 +93,6 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8 md:space-y-10">
-        {/* Section: Requestor Details */}
         <div className="space-y-5 md:space-y-6">
           <h3 className="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
             Requestor Details
@@ -170,12 +172,10 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
           </div>
         </div>
 
-        {/* Section: Page/Section Info */}
         <div className="space-y-5 md:space-y-6">
           <h3 className="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
             Page/Section to be Uploaded
           </h3>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
             <div>
               <label className="block text-xs md:text-sm font-bold text-slate-700 mb-1.5 md:mb-2">6. URL of the Page/Section *</label>
@@ -193,7 +193,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
               <input
                 required
                 type="text"
-                placeholder="e.g. Home Page, Contact Us"
+                placeholder="e.g. Home Page"
                 className="w-full px-4 py-2.5 md:py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all text-sm"
                 value={formData.pageName || ''}
                 onChange={(e) => setFormData({ ...formData, pageName: e.target.value })}
@@ -202,12 +202,10 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
           </div>
         </div>
 
-        {/* Section: Change Details */}
         <div className="space-y-5 md:space-y-6">
           <h3 className="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
-            Change Description
+            Details
           </h3>
-
           <div>
             <label className="block text-xs md:text-sm font-bold text-slate-700 mb-1.5 md:mb-2">8. Describe the change in detail *</label>
             <textarea
@@ -219,53 +217,16 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSuccess }) => {
               onChange={(e) => setFormData({ ...formData, changeDescription: e.target.value })}
             />
           </div>
-
           <div>
             <label className="block text-xs md:text-sm font-bold text-slate-700 mb-1.5 md:mb-2">9. Upload Files if any</label>
             <div 
               onClick={() => fileInputRef.current?.click()}
               className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-8 text-center cursor-pointer hover:border-teal-500 hover:bg-teal-50 transition-all group"
             >
-              <input 
-                type="file" 
-                multiple 
-                className="hidden" 
-                ref={fileInputRef} 
-                onChange={handleFileChange}
-                accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,image/*,video/*,audio/*"
-              />
-              <div className="bg-slate-100 text-slate-400 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:bg-teal-100 group-hover:text-teal-600 transition-colors">
-                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-              </div>
-              <p className="text-slate-600 font-bold text-sm md:text-base">Click to upload or drag and drop</p>
-              <p className="text-slate-400 text-[10px] md:text-xs mt-1 md:mt-2">Up to 5 files (Max 10MB each)</p>
+              <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+              <p className="text-slate-600 font-bold text-sm">Click to upload or drag and drop</p>
             </div>
-
-            {files.length > 0 && (
-              <div className="mt-4 space-y-2">
-                {files.map((f, i) => (
-                  <div key={i} className="flex items-center justify-between bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-100">
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <div className="text-teal-600 bg-teal-100 p-1.5 rounded">
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span className="text-xs md:text-sm font-medium text-slate-700 truncate max-w-[150px] md:max-w-[200px]">{f.name}</span>
-                    </div>
-                    <button type="button" onClick={() => removeFile(i)} className="text-slate-400 hover:text-red-500 p-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-
           <div>
             <label className="block text-xs md:text-sm font-bold text-slate-700 mb-1.5 md:mb-2">10. Desired Go-Live Date *</label>
             <input
