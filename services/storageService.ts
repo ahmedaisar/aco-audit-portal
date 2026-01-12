@@ -63,13 +63,15 @@ export const storageService = {
     if (requests.length === 0) return;
     
     const headers = [
-      'ID', 'Submission Date', 'Requestor Name', 'Department', 'Email', 'Priority',
-      'Target URL', 'Page Name', 'Description', 'Files Count', 'Desired Go-Live'
+      'ID', 'Submission Date', 'Type', 'Requestor Name', 'Department', 'Email', 'Priority',
+      'Target URL', 'Page Name', 'Description', 'Files Count', 'Desired Go-Live',
+      'Resort Name', 'Resort Contact'
     ];
     
     const rows = requests.map(r => [
       r.id,
       new Date(r.timestamp).toLocaleString(),
+      r.tabType,
       `"${r.requestorName}"`,
       `"${r.department}"`,
       `"${r.emailId}"`,
@@ -78,7 +80,9 @@ export const storageService = {
       `"${r.pageName}"`,
       `"${r.changeDescription.replace(/"/g, '""')}"`,
       r.files.length,
-      `"${r.desiredGoLiveDate}"`
+      `"${r.desiredGoLiveDate}"`,
+      r.resortName ? `"${r.resortName}"` : '',
+      r.resortOpsContact ? `"${r.resortOpsContact}"` : ''
     ]);
 
     const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
