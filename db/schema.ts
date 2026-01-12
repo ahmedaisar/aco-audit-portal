@@ -2,10 +2,12 @@ import { pgTable, text, timestamp, integer, jsonb, pgEnum, uuid } from 'drizzle-
 import { relations } from 'drizzle-orm';
 
 export const priorityEnum = pgEnum('priority', ['High', 'Medium', 'Low']);
+export const tabTypeEnum = pgEnum('tab_type', ['RAS', 'COB', 'AHR']);
 
 export const changeRequests = pgTable('change_requests', {
   id: text('id').primaryKey(),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
+  tabType: tabTypeEnum('tab_type').notNull(),
   requestorName: text('requestor_name').notNull(),
   department: text('department').notNull(),
   emailId: text('email_id').notNull(),
@@ -15,6 +17,10 @@ export const changeRequests = pgTable('change_requests', {
   pageName: text('page_name').notNull(),
   changeDescription: text('change_description').notNull(),
   desiredGoLiveDate: text('desired_go_live_date').notNull(),
+  resortName: text('resort_name'),
+  resortOpsContact: text('resort_ops_contact'),
+  checklistData: jsonb('checklist_data'),
+  notesData: jsonb('notes_data'),
 });
 
 export const changeRequestsRelations = relations(changeRequests, ({ many }) => ({

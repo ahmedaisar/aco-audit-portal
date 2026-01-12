@@ -12,6 +12,7 @@ export interface FileMetadata {
   size: number;
   type: string;
   base64?: string;
+  url?: string;
 }
 
 export interface WebsiteChangeRequest {
