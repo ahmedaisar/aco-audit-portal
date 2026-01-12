@@ -1,4 +1,4 @@
-import { db, changeRequests, files as filesTable } from '@db';
+import { db, changeRequests, files as filesTable } from '../db';
 import { desc, eq } from 'drizzle-orm';
 
 export default async function handler(req: any, res: any) {

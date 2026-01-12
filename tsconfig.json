@@ -21,9 +21,6 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@db": [
-        "./db/index.ts"
       ]
     },
     "allowImportingTsExtensions": true,

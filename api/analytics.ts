@@ -1,4 +1,4 @@
-import { db, analytics } from '@db';
+import { db, analytics } from '../db';
 import { sql } from 'drizzle-orm';
 
 export default async function handler(req: any, res: any) {
