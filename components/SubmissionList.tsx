@@ -35,13 +35,30 @@ const SubmissionList: React.FC = () => {
     );
   };
 
+  const TabTypeBadge = ({ tabType }: { tabType: string }) => {
+    const colors = {
+      RAS: 'bg-teal-100 text-teal-700 border-teal-200',
+      COB: 'bg-purple-100 text-purple-700 border-purple-200',
+      AHR: 'bg-indigo-100 text-indigo-700 border-indigo-200'
+    };
+    const color = colors[tabType as keyof typeof colors] || 'bg-gray-100 text-gray-700 border-gray-200';
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold border ${color}`}>
+        {tabType}
+      </span>
+    );
+  };
+
   const RequestCard: React.FC<{ req: WebsiteChangeRequest }> = ({ req }) => (
     <div 
       onClick={() => setSelectedRequest(req)}
       className={`p-4 bg-white border rounded-xl mb-3 shadow-sm transition-all active:scale-95 ${selectedRequest?.id === req.id ? 'border-teal-500 ring-1 ring-teal-500' : 'border-slate-200'}`}
     >
       <div className="flex justify-between items-start mb-2">
-        <div className="font-bold text-slate-800 text-sm">{req.requestorName}</div>
+        <div className="flex flex-col gap-1">
+          <div className="font-bold text-slate-800 text-sm">{req.requestorName}</div>
+          <TabTypeBadge tabType={req.tabType} />
+        </div>
         <PriorityBadge priority={req.priority} />
       </div>
       <div className="text-xs text-slate-600 font-medium mb-1">{req.pageName}</div>
@@ -96,6 +113,7 @@ const SubmissionList: React.FC = () => {
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest">
                     <th className="px-6 py-4">Requestor</th>
+                    <th className="px-6 py-4">Type</th>
                     <th className="px-6 py-4">Page Target</th>
                     <th className="px-6 py-4">Priority</th>
                     <th className="px-6 py-4">Deadline</th>
@@ -112,6 +130,7 @@ const SubmissionList: React.FC = () => {
                         <div className="font-bold text-slate-800 text-sm">{req.requestorName}</div>
                         <div className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">{req.department}</div>
                       </td>
+                      <td className="px-6 py-4"><TabTypeBadge tabType={req.tabType} /></td>
                       <td className="px-6 py-4">
                         <div className="text-xs text-slate-700 font-bold">{req.pageName}</div>
                         <div className="text-[10px] text-teal-600 truncate max-w-[120px]">{req.url}</div>
@@ -153,6 +172,13 @@ const SubmissionList: React.FC = () => {
 
               <div className="space-y-4">
                 <section>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Type</label>
+                  <div className="mt-1">
+                    <TabTypeBadge tabType={selectedRequest.tabType} />
+                  </div>
+                </section>
+
+                <section>
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</label>
                   <div className="mt-1 text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed italic">
                     "{selectedRequest.changeDescription}"
@@ -174,6 +200,48 @@ const SubmissionList: React.FC = () => {
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">URL</label>
                   <p className="mt-0.5 text-[10px] text-teal-600 break-all">{selectedRequest.url}</p>
                 </section>
+
+                {/* AHR/COB Specific Fields */}
+                {(selectedRequest.tabType === 'AHR' || selectedRequest.tabType === 'COB') && (
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                    {selectedRequest.resortName && (
+                      <section>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resort</label>
+                        <p className="mt-0.5 text-xs font-bold text-slate-800">{selectedRequest.resortName}</p>
+                      </section>
+                    )}
+                    {selectedRequest.resortOpsContact && (
+                      <section>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resort Contact</label>
+                        <p className="mt-0.5 text-xs font-bold text-slate-800">{selectedRequest.resortOpsContact}</p>
+                      </section>
+                    )}
+                  </div>
+                )}
+
+                {/* Checklist Data for AHR/COB */}
+                {selectedRequest.checklistData && 
+                 typeof selectedRequest.checklistData === 'object' && 
+                 selectedRequest.checklistData !== null &&
+                 Object.keys(selectedRequest.checklistData).length > 0 && (
+                  <section className="pt-2 border-t border-slate-100">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Audit Checklist Results</label>
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 max-h-48 overflow-y-auto">
+                      <div className="space-y-2 text-[10px]">
+                        {Object.entries(selectedRequest.checklistData).map(([key, value]) => (
+                          <div key={key} className="flex justify-between gap-2">
+                            <span className="text-slate-600 flex-1">{key}</span>
+                            <span className={`font-bold ${
+                              value === 'Yes' ? 'text-green-600' : 
+                              value === 'No' ? 'text-red-600' : 
+                              'text-amber-600'
+                            }`}>{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
 
                 <section>
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Files ({selectedRequest.files.length})</label>

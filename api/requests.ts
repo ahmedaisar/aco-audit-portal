@@ -23,6 +23,7 @@ export default async function handler(req: any, res: any) {
       
       await db.insert(changeRequests).values({
         id: request.id,
+        tabType: request.tabType,
         requestorName: request.requestorName,
         department: request.department,
         emailId: request.emailId,
@@ -32,6 +33,10 @@ export default async function handler(req: any, res: any) {
         pageName: request.pageName,
         changeDescription: request.changeDescription,
         desiredGoLiveDate: request.desiredGoLiveDate,
+        resortName: request.resortName,
+        resortOpsContact: request.resortOpsContact,
+        checklistData: request.checklistData,
+        notesData: request.notesData,
       });
 
       if (files && files.length > 0) {
