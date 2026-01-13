@@ -1,4 +1,4 @@
-# Atmosphere Core Audit Portal
+# ACO Audit Portal
 
 A web application for managing website change requests with file uploads and analytics tracking.
 
@@ -78,20 +78,6 @@ Make sure to set the environment variables in the Vercel dashboard:
 - `GET /api/analytics` - Get page view statistics
 - `POST /api/analytics` - Increment page view count
 - `POST /api/upload` - Handle file uploads (used internally)
-
-## Key Fixes Applied
-
-### 1. Vercel Configuration
-Added `vercel.json` to properly route API requests to serverless functions.
-
-### 2. Development Proxy
-Updated `vite.config.ts` to proxy `/api` requests during local development.
-
-### 3. API Handler Format
-Ensured all API handlers follow Vercel's serverless function format with proper exports.
-
-### 4. Build Configuration
-Added `vercel-build` script for production builds.
 
 ## Project Structure
 

@@ -125,7 +125,7 @@ const COBForm: React.FC<COBFormProps> = ({ onSuccess }) => {
             <input
               required
               type="text"
-              placeholder="Resort Name"
+              placeholder="e.g. OBLU SELECT Sangeli"
               className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
               value={formData.resort}
               onChange={e => setFormData({ ...formData, resort: e.target.value })}

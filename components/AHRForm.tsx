@@ -177,7 +177,7 @@ const AHRForm: React.FC<AHRFormProps> = ({ onSuccess }) => {
             <input
               required
               type="text"
-              placeholder="e.g. OBLU SELECT Lobigili"
+              placeholder="e.g. Atmosphere Kanifushi Maldives"
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all"
               value={formData.resort}
               onChange={e => setFormData({ ...formData, resort: e.target.value })}

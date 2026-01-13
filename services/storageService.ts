@@ -62,28 +62,59 @@ export const storageService = {
   exportToCSV: (requests: WebsiteChangeRequest[]): void => {
     if (requests.length === 0) return;
     
-    const headers = [
+    // Separate base fields and dynamic checklist fields
+    const baseHeaders = [
       'ID', 'Submission Date', 'Type', 'Requestor Name', 'Department', 'Email', 'Priority',
       'Target URL', 'Page Name', 'Description', 'Files Count', 'Desired Go-Live',
       'Resort Name', 'Resort Contact'
     ];
     
-    const rows = requests.map(r => [
-      r.id,
-      new Date(r.timestamp).toLocaleString(),
-      r.tabType,
-      `"${r.requestorName}"`,
-      `"${r.department}"`,
-      `"${r.emailId}"`,
-      r.priority,
-      `"${r.url}"`,
-      `"${r.pageName}"`,
-      `"${r.changeDescription.replace(/"/g, '""')}"`,
-      r.files.length,
-      `"${r.desiredGoLiveDate}"`,
-      r.resortName ? `"${r.resortName}"` : '',
-      r.resortOpsContact ? `"${r.resortOpsContact}"` : ''
-    ]);
+    // Collect all unique checkpoint questions and notes from all requests
+    const allCheckpoints = new Set<string>();
+    requests.forEach(r => {
+      if (r.checklistData) {
+        Object.keys(r.checklistData).forEach(cp => allCheckpoints.add(cp));
+      }
+    });
+    
+    // Create headers for each checkpoint (Status + Notes)
+    const checkpointHeaders: string[] = [];
+    Array.from(allCheckpoints).sort().forEach(checkpoint => {
+      checkpointHeaders.push(`${checkpoint} - Status`);
+      checkpointHeaders.push(`${checkpoint} - Notes`);
+    });
+    
+    const headers = [...baseHeaders, ...checkpointHeaders];
+    
+    const rows = requests.map(r => {
+      const baseData = [
+        r.id,
+        new Date(r.timestamp).toLocaleString(),
+        r.tabType,
+        `"${r.requestorName}"`,
+        `"${r.department}"`,
+        `"${r.emailId}"`,
+        r.priority,
+        `"${r.url}"`,
+        `"${r.pageName}"`,
+        `"${r.changeDescription.replace(/"/g, '""')}"`,
+        r.files.length,
+        `"${r.desiredGoLiveDate}"`,
+        r.resortName ? `"${r.resortName}"` : '',
+        r.resortOpsContact ? `"${r.resortOpsContact}"` : ''
+      ];
+      
+      // Add checklist data for each checkpoint
+      const checklistData: string[] = [];
+      Array.from(allCheckpoints).sort().forEach(checkpoint => {
+        const status = r.checklistData?.[checkpoint] || '';
+        const notes = r.notesData?.[checkpoint] || '';
+        checklistData.push(`"${status}"`);
+        checklistData.push(`"${notes.replace(/"/g, '""')}"`);
+      });
+      
+      return [...baseData, ...checklistData];
+    });
 
     const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
